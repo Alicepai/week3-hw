@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alicia Dessert</title>
+    <!-- google fonts -->
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+<link href="https://fonts.googleapis.com/css2?family=Parisienne&display=swap" rel="stylesheet">
+    <!-- css -->
+    <link rel="stylesheet" href="../css/normalize.css">
+    <link rel="stylesheet" href="../css/style.css">
+    <!-- vue -->
+    <script src="https://unpkg.com/vue@next"></script>
+    <!-- axios -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js" integrity="sha512-bZS47S7sPOxkjU/4Bt0zrhEtWx0y0CRkhEp8IckzK+ltifIIE9EMIMTuT/mEzoIMewUINruDBIR/jJnbguonqQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+</head>
+<body>
+    <div id="app">
+        <div class="container-wrapper">
+            <div class="container">
+                <div class="img-wrapper">
+                    <img src="../img/login2.jpg" alt="">
+                </div>
+                <div class="form">
+                    <div class="form-control">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" v-model="user.username">
+                    </div>
+                    <div class="form-control">
+                        <label for="pwd">Password</label>
+                        <input type="password" id="pwd" v-model="user.password">
+                    </div>
+                    <button type="button" class="loginBtn" v-on:click="login">登入</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        const obj = {
+            data(){
+                return{
+                    apiUrl:'https://vue3-course-api.hexschool.io',
+                    user:{
+                        username:'',
+                        password:''
+                    }
+
+                }
+            },
+            methods:{
+                login(){
+                    axios.post(`${this.apiUrl}/admin/signin`,this.user)
+                    .then(res=>{
+                        console.log(res);
+                        if(res.data.success){
+                            
+                            window.location.href = "./productList.html"
+                        }
+                    })
+                }
+            }
+        }
+       Vue.createApp(obj).mount('#app');
+    </script>
+    
+</body>
+</html>

@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alicia Dessert</title>
+    <!-- google fonts -->
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Parisienne&display=swap" rel="stylesheet">
+    <!-- css -->
+    <link rel="stylesheet" href="../css/normalize.css">
+    <link rel="stylesheet" href="../css/style.css">
+    <!-- vue -->
+    <script src="https://unpkg.com/vue@next"></script>
+    <!-- axios -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"
+        integrity="sha512-bZS47S7sPOxkjU/4Bt0zrhEtWx0y0CRkhEp8IckzK+ltifIIE9EMIMTuT/mEzoIMewUINruDBIR/jJnbguonqQ=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <!-- fontawesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"
+        integrity="sha512-iBBXm8fW90+nuLcSKlbmrPcLa0OT92xO1BIsZ+ywDWZCvqsWgccV3gFoRBv0z+8dLJgyAHIhR35VZc2oM/gI1w=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+</head>
+
+<body>
+    <div id="app">
+        <header class="header">
+            <div class="header-wrapper">
+                <h1>Alicia Dessert</h1>
+                <button type="button" class="btn" id="addbtn" v-on:click="openModal('new')">新增商品 <i class="fas fa-plus-circle"></i></button>
+            </div>
+        </header>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width:150px">產品種類</th>
+                        <th style="width:250px">產品名稱</th>
+                        <th style="width:150px">原價</th>
+                        <th style="width:150px"> 售價</th>
+                        <th style="width:150px">批貨狀態</th>
+                        <th style="width:150px">功能</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="(item,key) in products" :key="item.id">
+                        <td>{{item.category}}</td>
+                        <td>{{item.title}}</td>
+                        <td>{{item.origin_price}}</td>
+                        <td>{{item.price}}</td>
+                        <td :class="item.is_enabled?'active':'danger'">{{item.is_enabled? '啟用':'未啟用'}}</td>
+                        <td style="width:100px">
+                            <i class="fas fa-pencil-alt" :data-id="item.id" @click="openModal('edit',item)"></i>
+                            <i class="fas fa-trash-alt" :data-id="item.id" v-on:click="openModal('delete',item)"></i>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            <p>總共<span id="product_num">{{this.products.length}}</span>件商品</p>
+        </div>
+        <!-- Modal -->
+        <div class="modal" v-if="isShow">
+            <div class="modal-content">
+                <header>
+                    <h3 v-if="isNew">新增產品</h3>
+                    <h3 v-else>編輯產品</h3>
+                </header>
+                <div class="form-wrapper">
+                    <form>
+                        <div class="left-content">
+                            <div class="form-control">
+                                <label>主要圖片</label>
+                                <input type="text" v-model="tempProduct.imageUrl">
+                                <img :src="tempProduct.imageUrl" alt="">
+                            </div>
+                            <div>多圖新增</div>
+                            <div v-if="Array.isArray(tempProduct.imagesUrl)">
+                                <!-- 迴圈多圖及顯示圖示 -->
+                                <div class="" v-for="(image, key) in tempProduct.imagesUrl" :key="key">
+                                    <div class="form-group">
+                                        <label for="imageUrl">圖片網址</label>
+                                        <input v-model="tempProduct.imagesUrl[key]" type="text" class="form-controls">
+                                    </div>
+                                    <img :src="image">
+                                </div>
+                                <!-- 迴圈結束 -->
+                                <!-- 按鍵判斷 -->
+                                <div
+                                    v-if="!tempProduct.imagesUrl.length || tempProduct.imagesUrl[tempProduct.imagesUrl.length - 1]">
+                                    <button type="button" class="" @click="tempProduct.imagesUrl.push('')">
+                                        新增圖片
+                                    </button>
+                                </div>
+                                <!-- 新增按鍵結束 -->
+                                <!-- 刪除按鈕開始 -->
+                                <div v-else>
+                                    <button type="button" class="" @click="tempProduct.imagesUrl.pop()">
+                                        刪除圖片
+                                    </button>
+                                </div>
+                                <!-- 刪除按鈕結束 -->
+                            </div>
+                            <!-- 對應多圖新增的外層v-if （如果非編輯，就是單純新增產品的按鍵）-->
+                            <div v-else>
+                                <button type="button" class="" @click="createImages">
+                                    新增圖片
+                                </button>
+                            </div>
+                            <!-- 新增商品圖片按鍵結束 -->
+                        </div>
+                        <div class="right-content">
+                            <div class="form-control">
+                                <label for="category">商品種類</label>
+                                <input type="text" id="category" v-model="tempProduct.category">
+                            </div>
+                            <div class="form-control">
+                                <label for="title">商品名稱</label>
+                                <input type="text" id="title" v-model="tempProduct.title">
+                            </div>
+
+                            <div class="group">
+                                <label for="origin_price">原價</label>
+                                <input type="number" min="0" id="origin_price"
+                                    v-model.number="tempProduct.origin_price">
+                                <label for="price">價格</label>
+                                <input type="number" min="0" id="price" v-model.number="tempProduct.price">
+                                <label for="unit">單位</label>
+                                <input type="text" id="unit" v-model="tempProduct.unit">
+                            </div>
+                            <label for="descript">產品描述</label>
+                            <textarea type="text" id="descript" v-model="tempProduct.description" style="width:666px;"
+                                rows="8"></textarea>
+                            <label for="content">產品內容</label>
+                            <textarea type="text" id="content" v-model="tempProduct.content" rows="6"
+                                style="width:666px;"></textarea>
+
+                            <label for="is_enabled" class="enableClass">是否啟用</label>
+
+                            <input type="checkbox" v-model="tempProduct.is_enabled">
+                            <div class="btn-group">
+                                <button type="button" class="btn btn-primary" @click="resetModal">取消</button>
+                                <button type="button" class="btn btn-danger" @click="updateProduct">確認</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="modal deleteModal" v-if="deleteModal">
+            <div class="modal-content">
+                <header>
+                    <p>刪除產品</p>
+                    <div class="closebtn" @click="deleteModal=false">
+                        <i class="fas fa-times"></i>
+                    </div>
+                </header>
+
+                <main>
+                    <p>確定是否刪除{{tempProduct.title}}？</p>
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-primary"@click="deleteModal=false">取消</button>
+                        <button type="button" class="btn btn-cancel" @click="deleteProduct">刪除</button>
+                    </div>
+                </main>
+            </div>
+        </div>
+    </div>
+    <script>
+        const obj = {
+            data() {
+                return {
+                    apiUrl: 'https://vue3-course-api.hexschool.io',
+                    apiPath: 'dessert-alicia',
+                    products: [],
+                    isShow: false,
+                    deleteModal:false,
+                    isNew: false,
+                    tempProduct: {
+                        imagesUrl: [],
+                    },
+                }
+            },
+            mounted() {
+                const token = document.cookie.replace(/(?:(?:^|.*;\s*)aliciaToken\s*\=\s*([^;]*).*$)|^.*$/, "$1");
+                axios.defaults.headers.common['Authorization'] = token;
+                if(!token){
+
+                }
+                this.getData();
+            },
+            methods: {
+                getData() {
+                    axios.get(`${this.apiUrl}/api/${this.apiPath}/admin/products`)
+                        .then(res => {
+                            // console.log(res) 
+                            if (res.data.success) {
+                                this.products = res.data.products;
+                            }else{
+                                alert(res.data.message)
+                            }
+                        })
+                        .catch(err=>console.log(err))
+                },
+                deleteProduct() {
+                    // const id = e.target.dataset.id;
+                    // 事件物件
+                    axios.delete(`${this.apiUrl}/api/${this.apiPath}/admin/product/${this.tempProduct.id}`)
+                        .then(res => {
+                            console.log(res);
+                            this.getData();
+                        })
+                },
+                updateProduct() {
+                    let url = `${this.apiUrl}/api/${this.apiPath}/admin/product`;
+                    let http = 'post';
+
+                    if (!this.isNew) {
+                        url = `${this.apiUrl}/api/${this.apiPath}/admin/product/${this.tempProduct.id}`;
+                        http = 'put'
+                    }
+
+                    axios[http](url, { data: this.tempProduct }).then((response) => {
+                        if (response.data.success) {
+                            alert(response.data.message);
+                            this.isShow = false;
+                            this.getData();
+                        } else {
+                            alert(response.data.message);
+                        }
+                    })
+                    .catch(err=>console.log(err));
+                },
+                openModal(isNew, item) {
+                    if (isNew == 'new') {
+                        this.tempProduct = {
+                            imagesUrl: []
+                        }
+                        this.isShow = true;
+                        this.isNew = true;
+                    } else if (isNew == 'edit') {
+                        this.tempProduct = { ...item }
+                        this.isShow = true;
+                    }else if (isNew == 'delete'){
+                        this.tempProduct = { ...item }
+                        this.deleteModal = true;
+                    }
+
+                },
+                resetModal() {
+                    this.isNew = false;
+                    this.isShow = false;
+                },
+                createImages() {
+                    this.tempProduct.imagesUrl = [];
+                    this.tempProduct.imagesUrl.push('');
+                },
+            }
+        }
+        Vue.createApp(obj).mount('#app');
+    </script>
+
+</body>
+
+</html>
