@@ -59,8 +59,8 @@
                         .then(res => {
                             console.log(res);
                             if (res.data.success) {
-                                const { token, expired } = response.data;
-                                document.cookie = `hexToken=${token};expires=${new Date(expired)}; path=/`;
+                                const { token, expired } = res.data;
+                                document.cookie = `aliciaToken=${token};expires=${new Date(expired)}; path=/`;
                                 window.location.href = "./productList.html"
                             } else {
                                 alert(res.data.message)
